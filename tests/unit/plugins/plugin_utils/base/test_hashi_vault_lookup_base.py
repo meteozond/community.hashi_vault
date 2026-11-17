@@ -95,7 +95,7 @@ class TestHashiVaultLookupBaseSecretRegistration(object):
     @pytest.fixture
     def registered(self, monkeypatch):
         calls = []
-        monkeypatch.setattr(lookup_base_module, 'register_secrets', lambda values: calls.extend(values))
+        monkeypatch.setattr(lookup_base_module, 'register_secrets', calls.extend)
         return calls
 
     def test_register_secret_values_walks_nested_values(self, hashi_vault_lookup_module, registered):
