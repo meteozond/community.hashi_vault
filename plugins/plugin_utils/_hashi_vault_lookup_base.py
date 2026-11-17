@@ -30,16 +30,11 @@ display = Display()
 
 
 def _iter_strings(value):
-    if isinstance(value, Mapping):
-        for item in value.values():
-            for text in _iter_strings(item):
-                yield text
-    elif isinstance(value, (list, tuple)):
-        for item in value:
-            for text in _iter_strings(item):
-                yield text
-    elif isinstance(value, str):
+    if isinstance(value, str):
         yield value
+    elif isinstance(value, (Mapping, list, tuple)):
+        for item in (value.values() if isinstance(value, Mapping) else value):
+            yield from _iter_strings(item)
 
 
 class HashiVaultLookupBase(HashiVaultPlugin, LookupBase):
