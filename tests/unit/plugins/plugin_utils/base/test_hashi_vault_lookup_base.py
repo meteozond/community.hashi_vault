@@ -98,10 +98,10 @@ class TestHashiVaultLookupBaseSecretRegistration(object):
         monkeypatch.setattr(lookup_base_module, 'register_secrets', lambda values: calls.extend(values))
         return calls
 
-    def test_register_secret_values_walks_nested_strings(self, hashi_vault_lookup_module, registered):
-        hashi_vault_lookup_module.register_secret_values({'a': 'one', 'b': ['two', {'c': 'three'}], 'n': 5, 'z': None})
+    def test_register_secret_values_walks_nested_values(self, hashi_vault_lookup_module, registered):
+        hashi_vault_lookup_module.register_secret_values({'a': 'one', 'b': ['two', {'c': 'three'}], 'n': 5, 't': True, 'z': None})
 
-        assert sorted(registered) == ['one', 'three', 'two']
+        assert sorted(registered) == ['5', 'one', 'three', 'two']
 
     def test_register_secret_values_without_api(self, hashi_vault_lookup_module, monkeypatch):
         monkeypatch.setattr(lookup_base_module, 'register_secrets', None)

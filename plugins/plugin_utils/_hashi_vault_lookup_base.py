@@ -20,6 +20,8 @@ from ansible.utils.display import Display
 
 from ..plugin_utils._hashi_vault_plugin import HashiVaultPlugin
 
+from ansible.module_utils.common.parameters import _return_datastructure_name
+
 try:
     from ansible.module_utils.secrets import register_secrets
 except ImportError:
@@ -29,14 +31,6 @@ except ImportError:
 display = Display()
 
 
-def _iter_strings(value):
-    if isinstance(value, str):
-        yield value
-    elif isinstance(value, (Mapping, list, tuple)):
-        for item in (value.values() if isinstance(value, Mapping) else value):
-            yield from _iter_strings(item)
-
-
 class HashiVaultLookupBase(HashiVaultPlugin, LookupBase):
 
     def __init__(self, loader=None, templar=None, **kwargs):
@@ -44,9 +38,9 @@ class HashiVaultLookupBase(HashiVaultPlugin, LookupBase):
         LookupBase.__init__(self, loader=loader, templar=templar, **kwargs)
 
     def register_secret_values(self, value):
-        '''registers every string in value as a secret, so ansible-core 2.22+ redacts it in output'''
+        '''registers every string and number in value as a secret, so ansible-core 2.22+ redacts it in output'''
         if register_secrets is not None:
-            register_secrets(list(_iter_strings(value)))
+            register_secrets(list(_return_datastructure_name(value)))
 
     def register_response_secrets(self, response):
         '''registers the secret parts of a Vault API response: its data (KV v2 unwrapped) and its auth token'''
