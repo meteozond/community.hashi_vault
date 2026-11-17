@@ -118,6 +118,7 @@ class LookupModule(HashiVaultLookupBase):
             if data is None:
                 raise AnsibleError("The path '%s' doesn't seem to exist." % term)
 
+            self.register_response_secrets(data)
             ret.append(data)
 
         return ret

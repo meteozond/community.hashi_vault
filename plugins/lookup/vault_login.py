@@ -131,4 +131,5 @@ class LookupModule(HashiVaultLookupBase):
         except (NotImplementedError, HashiVaultValueError) as e:
             raise AnsibleError(e)
 
+        self.register_response_secrets(response)
         return [response]

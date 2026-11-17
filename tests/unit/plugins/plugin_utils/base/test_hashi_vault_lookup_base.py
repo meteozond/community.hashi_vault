@@ -15,6 +15,7 @@ from ansible.plugins.lookup import LookupBase
 
 from ......plugins.plugin_utils._hashi_vault_plugin import HashiVaultPlugin
 from ......plugins.plugin_utils._hashi_vault_lookup_base import HashiVaultLookupBase
+from ......plugins.plugin_utils import _hashi_vault_lookup_base as lookup_base_module
 
 
 @pytest.fixture
@@ -87,3 +88,51 @@ class TestHashiVaultLookupBase(object):
 
         with pytest.raises(AnsibleOptionsError, match=expected_match):
             hashi_vault_lookup_module.parse_kev_term(term, plugin_name='fake', first_unqualified=dup_key)
+
+
+class TestHashiVaultLookupBaseSecretRegistration(object):
+
+    @pytest.fixture
+    def registered(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(lookup_base_module, 'register_secrets', lambda values: calls.extend(values))
+        return calls
+
+    def test_register_secret_values_walks_nested_strings(self, hashi_vault_lookup_module, registered):
+        hashi_vault_lookup_module.register_secret_values({'a': 'one', 'b': ['two', {'c': 'three'}], 'n': 5, 'z': None})
+
+        assert sorted(registered) == ['one', 'three', 'two']
+
+    def test_register_secret_values_without_api(self, hashi_vault_lookup_module, monkeypatch):
+        monkeypatch.setattr(lookup_base_module, 'register_secrets', None)
+
+        hashi_vault_lookup_module.register_secret_values({'a': 'one'})
+
+    def test_register_response_secrets_kv2_skips_metadata(self, hashi_vault_lookup_module, registered):
+        response = {
+            'data': {
+                'data': {'password': 'hunter2-kv2'},
+                'metadata': {'created_time': '2026-11-17T00:00:00Z', 'version': 3},
+            },
+        }
+
+        hashi_vault_lookup_module.register_response_secrets(response)
+
+        assert registered == ['hunter2-kv2']
+
+    def test_register_response_secrets_kv1_and_auth(self, hashi_vault_lookup_module, registered):
+        response = {
+            'data': {'password': 'hunter2-kv1'},
+            'auth': {'client_token': 'hvs.token', 'accessor': 'not-a-secret'},
+            'lease_id': 'lease',
+        }
+
+        hashi_vault_lookup_module.register_response_secrets(response)
+
+        assert registered == ['hunter2-kv1', 'hvs.token']
+
+    @pytest.mark.parametrize('response', [None, b'raw body', 'text'])
+    def test_register_response_secrets_ignores_non_mapping(self, response, hashi_vault_lookup_module, registered):
+        hashi_vault_lookup_module.register_response_secrets(response)
+
+        assert registered == []

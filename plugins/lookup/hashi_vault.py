@@ -321,6 +321,8 @@ class LookupModule(HashiVaultLookupBase):
         if data is None:
             raise AnsibleError("The secret '%s' doesn't seem to exist." % secret)
 
+        self.register_response_secrets(data)
+
         if return_as == 'raw':
             return [data]
 

@@ -184,6 +184,7 @@ class LookupModule(HashiVaultLookupBase):
             else:
                 output = response
 
+            self.register_response_secrets(output)
             ret.append(output)
 
         return ret

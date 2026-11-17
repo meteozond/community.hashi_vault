@@ -177,4 +177,5 @@ class LookupModule(HashiVaultLookupBase):
             except Exception as e:
                 raise AnsibleError(e)
 
+        self.register_response_secrets(response)
         return [response]

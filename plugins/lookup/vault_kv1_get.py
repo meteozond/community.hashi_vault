@@ -200,6 +200,7 @@ class LookupModule(HashiVaultLookupBase):
 
             metadata = raw.copy()
             data = metadata.pop('data')
+            self.register_secret_values(data)
 
             ret.append(dict(raw=raw, data=data, secret=data, metadata=metadata))
 
